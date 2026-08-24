@@ -1,0 +1,15 @@
+# ROS 2 derleme klasörleri
+build/
+install/
+log/
+
+# Python geçici dosyaları
+__pycache__/
+*.pyc
+*.pyo
+
+# Editör ayarları
+.vscode/
+
+# Sistem dosyaları
+.DS_Store

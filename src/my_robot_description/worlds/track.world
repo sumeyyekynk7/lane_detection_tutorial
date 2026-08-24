@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+
+<sdf version="1.6">
+
+    <world name="track_world">
+
+        <!-- Gazebo ortamındaki ışık -->
+        <include>
+            <uri>model://sun</uri>
+        </include>
+
+        <!-- Sonsuz gibi görünen genel zemin -->
+        <include>
+            <uri>model://ground_plane</uri>
+        </include>
+
+        <!-- Koyu renkli yol -->
+        <model name="road">
+
+            <static>true</static>
+
+            <link name="road_link">
+
+                <visual name="road_visual">
+                    <pose>0 0 0.01 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>20 4 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>0.15 0.15 0.15 1</ambient>
+                        <diffuse>0.15 0.15 0.15 1</diffuse>
+                    </material>
+                </visual>
+
+                <collision name="road_collision">
+                    <pose>0 0 0.01 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>20 4 0.02</size>
+                        </box>
+                    </geometry>
+                </collision>
+
+            </link>
+        </model>
+
+        <!-- Sol beyaz çizgi -->
+        <model name="left_lane_line">
+
+            <static>true</static>
+
+            <pose>0 1.5 0.03 0 0 0</pose>
+
+            <link name="line_link">
+
+                <visual name="line_visual">
+
+                    <geometry>
+                        <box>
+                            <size>20 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+
+                </visual>
+
+            </link>
+        </model>
+
+        <!-- Sağ beyaz çizgi -->
+        <model name="right_lane_line">
+
+            <static>true</static>
+
+            <pose>0 -1.5 0.03 0 0 0</pose>
+
+            <link name="line_link">
+
+                <visual name="line_visual">
+
+                    <geometry>
+                        <box>
+                            <size>20 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+
+                </visual>
+
+            </link>
+        </model>
+
+                <!-- Yolun ortasındaki kesik beyaz çizgiler -->
+        <model name="center_lane_lines">
+
+            <!-- Şeritler hareket etmesin -->
+            <static>true</static>
+
+            <link name="center_lines_link">
+
+                <!-- 1. çizgi -->
+                <visual name="center_line_1">
+                    <pose>-8 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 2. çizgi -->
+                <visual name="center_line_2">
+                    <pose>-6 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 3. çizgi -->
+                <visual name="center_line_3">
+                    <pose>-4 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 4. çizgi -->
+                <visual name="center_line_4">
+                    <pose>-2 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 5. çizgi -->
+                <visual name="center_line_5">
+                    <pose>0 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 6. çizgi -->
+                <visual name="center_line_6">
+                    <pose>2 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 7. çizgi -->
+                <visual name="center_line_7">
+                    <pose>4 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 8. çizgi -->
+                <visual name="center_line_8">
+                    <pose>6 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+                <!-- 9. çizgi -->
+                <visual name="center_line_9">
+                    <pose>8 0 0.04 0 0 0</pose>
+
+                    <geometry>
+                        <box>
+                            <size>1.0 0.08 0.02</size>
+                        </box>
+                    </geometry>
+
+                    <material>
+                        <ambient>1 1 1 1</ambient>
+                        <diffuse>1 1 1 1</diffuse>
+                    </material>
+                </visual>
+
+            </link>
+
+        </model>
+
+    </world>
+
+</sdf>

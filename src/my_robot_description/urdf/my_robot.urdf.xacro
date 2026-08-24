@@ -1,0 +1,454 @@
+<?xml version="1.0"?>
+
+<robot
+    xmlns:xacro="http://www.ros.org/wiki/xacro"
+    name="my_robot">
+
+    <link name="base_link">
+
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+
+            <geometry>
+                <box size="0.8 0.5 0.2"/>
+            </geometry>
+
+            <material name="red">
+                <color rgba="0.1 0.0 0.0 1.0"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+
+            <geometry>
+                <box size="0.8 0.5 0.2"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="5.0"/>
+
+            <inertia
+                ixx="0.1208"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.2833"
+                iyz="0.0"
+                izz="0.3708"/>
+        </inertial>
+
+    </link>
+
+
+        <!-- ================================================= -->
+    <!-- SOL ÖN TEKERLEK                                   -->
+    <!-- ================================================= -->
+
+    <link name="front_left_wheel_link">
+
+        <visual>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+
+            <material name="wheel_black">
+                <color rgba="0.03 0.03 0.03 1.0"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="0.3"/>
+
+            <inertia
+                ixx="0.00084"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.0015"
+                iyz="0.0"
+                izz="0.00084"/>
+        </inertial>
+
+    </link>
+
+    <!-- Sol ön tekerleği gövdeye bağlar -->
+    <joint name="front_left_wheel_joint" type="continuous">
+
+        <parent link="base_link"/>
+        <child link="front_left_wheel_link"/>
+
+        <origin xyz="0.25 0.28 -0.1" rpy="0 0 0"/>
+
+        <axis xyz="0 1 0"/>
+
+    </joint>
+
+
+    <!-- ================================================= -->
+    <!-- SAĞ ÖN TEKERLEK                                   -->
+    <!-- ================================================= -->
+
+    <link name="front_right_wheel_link">
+
+        <visual>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+
+            <material name="wheel_black">
+                <color rgba="0.03 0.03 0.03 1.0"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="0.3"/>
+
+            <inertia
+                ixx="0.00084"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.0015"
+                iyz="0.0"
+                izz="0.00084"/>
+        </inertial>
+
+    </link>
+
+    <!-- Sağ ön tekerleği gövdeye bağlar -->
+    <joint name="front_right_wheel_joint" type="continuous">
+
+        <parent link="base_link"/>
+        <child link="front_right_wheel_link"/>
+
+        <origin xyz="0.25 -0.28 -0.1" rpy="0 0 0"/>
+
+        <axis xyz="0 1 0"/>
+
+    </joint>
+
+
+    <!-- ================================================= -->
+    <!-- SOL ARKA TEKERLEK                                 -->
+    <!-- ================================================= -->
+
+    <link name="rear_left_wheel_link">
+
+        <visual>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+
+            <material name="wheel_black">
+                <color rgba="0.03 0.03 0.03 1.0"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="0.3"/>
+
+            <inertia
+                ixx="0.00084"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.0015"
+                iyz="0.0"
+                izz="0.00084"/>
+        </inertial>
+
+    </link>
+
+    <!-- Sol arka tekerleği gövdeye bağlar -->
+    <joint name="rear_left_wheel_joint" type="continuous">
+
+        <parent link="base_link"/>
+        <child link="rear_left_wheel_link"/>
+
+        <origin xyz="-0.25 0.28 -0.1" rpy="0 0 0"/>
+
+        <axis xyz="0 1 0"/>
+
+    </joint>
+
+
+    <!-- ================================================= -->
+    <!-- SAĞ ARKA TEKERLEK                                 -->
+    <!-- ================================================= -->
+
+    <link name="rear_right_wheel_link">
+
+        <visual>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+
+            <material name="wheel_black">
+                <color rgba="0.03 0.03 0.03 1.0"/>
+            </material>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+
+            <geometry>
+                <cylinder radius="0.1" length="0.06"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="0.3"/>
+
+            <inertia
+                ixx="0.00084"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.0015"
+                iyz="0.0"
+                izz="0.00084"/>
+        </inertial>
+
+    </link>
+
+    <!-- Sağ arka tekerleği gövdeye bağlar -->
+    <joint name="rear_right_wheel_joint" type="continuous">
+
+        <parent link="base_link"/>
+        <child link="rear_right_wheel_link"/>
+
+        <origin xyz="-0.25 -0.28 -0.1" rpy="0 0 0"/>
+
+        <axis xyz="0 1 0"/>
+
+    </joint>
+
+
+        <!-- Kamera gövdesi -->
+    <link name="camera_link">
+
+        <visual>
+            <geometry>
+                <box size="0.08 0.12 0.08"/>
+            </geometry>
+
+            <material name="camera_black">
+                <color rgba="0.05 0.05 0.05 1.0"/>
+            </material>
+        </visual>
+
+        <collision>
+            <geometry>
+                <box size="0.08 0.12 0.08"/>
+            </geometry>
+        </collision>
+
+        <inertial>
+            <mass value="0.1"/>
+
+            <inertia
+                ixx="0.00017"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.00011"
+                iyz="0.0"
+                izz="0.00017"/>
+        </inertial>
+
+    </link>
+
+    <!-- Kamerayı araç gövdesine bağlar -->
+    <joint name="camera_joint" type="fixed">
+
+        <parent link="base_link"/>
+        <child link="camera_link"/>
+
+        <origin xyz="0.42 0 0.15" rpy="0 0 0"/>
+
+    </joint>
+
+    <!-- Kamera görüntüsünün koordinat sistemi -->
+    <link name="camera_optical_link"/>
+
+    <joint name="camera_optical_joint" type="fixed">
+
+        <parent link="camera_link"/>
+        <child link="camera_optical_link"/>
+
+        <origin
+            xyz="0 0 0"
+            rpy="-1.5708 0 -1.5708"/>
+
+    </joint>
+
+    <!-- Gazebo kamera sensörü -->
+    <gazebo reference="camera_link">
+
+        <sensor name="front_camera" type="camera">
+
+            <always_on>true</always_on>
+            <update_rate>30.0</update_rate>
+            <visualize>true</visualize>
+
+            <camera name="front_camera">
+
+                <horizontal_fov>1.396</horizontal_fov>
+
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format>
+                </image>
+
+                <clip>
+                    <near>0.02</near>
+                    <far>100.0</far>
+                </clip>
+
+            </camera>
+
+            <plugin
+                name="camera_controller"
+                filename="libgazebo_ros_camera.so">
+
+                <ros>
+                    <namespace>/camera</namespace>
+                </ros>
+
+                <camera_name>front_camera</camera_name>
+                <frame_name>camera_optical_link</frame_name>
+
+            </plugin>
+
+        </sensor>
+
+    </gazebo>
+
+        <!-- Sol ön tekerleğin Gazebo ayarları -->
+    <gazebo reference="front_left_wheel_link">
+
+        <material>Gazebo/Black</material>
+
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+
+    </gazebo>
+
+    <!-- Sağ ön tekerleğin Gazebo ayarları -->
+    <gazebo reference="front_right_wheel_link">
+
+        <material>Gazebo/Black</material>
+
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+
+    </gazebo>
+
+    <!-- Sol arka tekerleğin Gazebo ayarları -->
+    <gazebo reference="rear_left_wheel_link">
+
+        <material>Gazebo/Black</material>
+
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+
+    </gazebo>
+
+    <!-- Sağ arka tekerleğin Gazebo ayarları -->
+    <gazebo reference="rear_right_wheel_link">
+
+        <material>Gazebo/Black</material>
+
+        <mu1>1.0</mu1>
+        <mu2>1.0</mu2>
+
+    </gazebo>
+
+        <!-- ================================================= -->
+    <!-- DÖRT TEKERLEKLİ HAREKET EKLENTİSİ                 -->
+    <!-- ================================================= -->
+
+    <gazebo>
+
+        <plugin
+            name="skid_steer_drive"
+            filename="libgazebo_ros_diff_drive.so">
+
+            <!-- Araçta ön ve arka olmak üzere iki tekerlek çifti var -->
+            <num_wheel_pairs>2</num_wheel_pairs>
+
+            <!-- Ön tekerlek çifti -->
+            <left_joint>front_left_wheel_joint</left_joint>
+            <right_joint>front_right_wheel_joint</right_joint>
+
+            <!-- Arka tekerlek çifti -->
+            <left_joint>rear_left_wheel_joint</left_joint>
+            <right_joint>rear_right_wheel_joint</right_joint>
+
+            <!-- Ön tekerleklerin sağ-sol arasındaki uzaklığı -->
+            <wheel_separation>0.56</wheel_separation>
+
+            <!-- Arka tekerleklerin sağ-sol arasındaki uzaklığı -->
+            <wheel_separation>0.56</wheel_separation>
+
+            <!-- Ön tekerleklerin çapı -->
+            <wheel_diameter>0.20</wheel_diameter>
+
+            <!-- Arka tekerleklerin çapı -->
+            <wheel_diameter>0.20</wheel_diameter>
+
+            <!-- Tekerleklere uygulanabilecek en yüksek kuvvet -->
+            <max_wheel_torque>20.0</max_wheel_torque>
+
+            <!-- Tekerleklerin hızlanma sınırı -->
+            <max_wheel_acceleration>2.0</max_wheel_acceleration>
+
+            <!-- Aracın konum bilgisini yayınla -->
+            <publish_odom>true</publish_odom>
+
+            <!-- Odom ile araç arasındaki dönüşümü yayınla -->
+            <publish_odom_tf>true</publish_odom_tf>
+
+            <!-- Tekerleklerin dönüşümlerini yayınla -->
+            <publish_wheel_tf>true</publish_wheel_tf>
+
+            <!-- Konum bilgisinin koordinat sistemi -->
+            <odometry_frame>odom</odometry_frame>
+
+            <!-- Aracın ana koordinat sistemi -->
+            <robot_base_frame>base_link</robot_base_frame>
+
+        </plugin>
+
+    </gazebo>
+
+</robot>
