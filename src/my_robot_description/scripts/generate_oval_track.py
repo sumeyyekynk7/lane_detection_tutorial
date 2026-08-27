@@ -6,11 +6,12 @@ from pathlib import Path
 # PİST AYARLARI
 # =========================================================
 
-# Elipsin X yönündeki yarıçapı
-OVAL_X_RADIUS = 7.0
+# Düz bölümlerin pist merkezinden sağa/sola uzandığı mesafe.
+# Üst ve alt düz bölümlerin toplam uzunluğu bunun iki katıdır.
+STRAIGHT_HALF_LENGTH = 4.0
 
-# Elipsin Y yönündeki yarıçapı
-OVAL_Y_RADIUS = 4.0
+# İki uçtaki yarım dairelerin yarıçapı
+CURVE_RADIUS = 3.0
 
 # Yolun toplam genişliği
 ROAD_WIDTH = 2.4
@@ -21,8 +22,8 @@ EDGE_LINE_WIDTH = 0.10
 # Ortadaki kesik çizginin genişliği
 CENTER_LINE_WIDTH = 0.08
 
-# Elipsi oluşturacak parça sayısı
-SEGMENT_COUNT = 240
+# Her düz bölüm ve her yarım daire için kullanılacak parça sayısı
+SECTION_SEGMENT_COUNT = 60
 
 
 # =========================================================
@@ -138,24 +139,53 @@ add_line('            <link name="track_link">')
 
 
 # =========================================================
-# ELİPS PARÇALARINI OLUŞTUR
+# KOŞU PİSTİNİN MERKEZ HATTINI OLUŞTUR
 # =========================================================
 
-for index in range(SEGMENT_COUNT):
+track_points = []
 
-    # Mevcut parçanın başlangıç açısı
-    angle_1 = 2.0 * math.pi * index / SEGMENT_COUNT
+# Üst düz bölüm: sağdan sola
+for index in range(SECTION_SEGMENT_COUNT):
+    ratio = index / SECTION_SEGMENT_COUNT
+    x = STRAIGHT_HALF_LENGTH * (1.0 - 2.0 * ratio)
+    track_points.append((x, CURVE_RADIUS))
 
-    # Mevcut parçanın bitiş açısı
-    angle_2 = 2.0 * math.pi * (index + 1) / SEGMENT_COUNT
+# Sol yarım daire: üstten alta
+for index in range(SECTION_SEGMENT_COUNT):
+    angle = (
+        math.pi / 2.0
+        + math.pi * index / SECTION_SEGMENT_COUNT
+    )
+    x = -STRAIGHT_HALF_LENGTH + CURVE_RADIUS * math.cos(angle)
+    y = CURVE_RADIUS * math.sin(angle)
+    track_points.append((x, y))
 
-    # Parçanın başlangıç noktası
-    x_1 = OVAL_X_RADIUS * math.cos(angle_1)
-    y_1 = OVAL_Y_RADIUS * math.sin(angle_1)
+# Alt düz bölüm: soldan sağa
+for index in range(SECTION_SEGMENT_COUNT):
+    ratio = index / SECTION_SEGMENT_COUNT
+    x = -STRAIGHT_HALF_LENGTH + 2.0 * STRAIGHT_HALF_LENGTH * ratio
+    track_points.append((x, -CURVE_RADIUS))
 
-    # Parçanın bitiş noktası
-    x_2 = OVAL_X_RADIUS * math.cos(angle_2)
-    y_2 = OVAL_Y_RADIUS * math.sin(angle_2)
+# Sağ yarım daire: alttan üste
+for index in range(SECTION_SEGMENT_COUNT):
+    angle = (
+        -math.pi / 2.0
+        + math.pi * index / SECTION_SEGMENT_COUNT
+    )
+    x = STRAIGHT_HALF_LENGTH + CURVE_RADIUS * math.cos(angle)
+    y = CURVE_RADIUS * math.sin(angle)
+    track_points.append((x, y))
+
+
+# =========================================================
+# PİST PARÇALARINI OLUŞTUR
+# =========================================================
+
+for index in range(len(track_points)):
+
+    # Parçanın başlangıç ve bitiş noktaları
+    x_1, y_1 = track_points[index]
+    x_2, y_2 = track_points[(index + 1) % len(track_points)]
 
     # Başlangıç ve bitiş noktalarının tam ortası
     center_x = (x_1 + x_2) / 2.0

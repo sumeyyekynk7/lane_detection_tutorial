@@ -72,3 +72,15 @@ Basitçe:
 - OpenCV: Görüntünün içindeki yolu ve şeritleri inceler.
 
 --------------------------
+
+1. ✅ **Kamera ve görüntü hazırlama:** ROS görüntüsünü `cv_bridge` ile OpenCV’ye çevirme ve yolun alt yarısını ROI olarak seçme.
+
+2. ⏳ **Şeritleri ayırma:** HSV ile sarı/beyaz renkleri filtreleme ve Canny Edge ile kenarları çıkarma.
+
+3. **Şerit doğrularını bulma:** Hough Transform ile sol ve sağ şeritleri tespit edip görüntü üzerinde renkli çizme.
+
+4. **Sapma ve direksiyon hesabı:** Şerit merkezini bulma, görüntü merkezine göre piksel hatasını hesaplama ve P-Controller ile direksiyon değerine dönüştürme.
+
+5. **Otomatik sürüş:** İleri hız ve dönüş komutlarını `/cmd_vel` üzerinden yayınlama, şerit kaybolduğunda durma ve oval pistte test etme.
+
+----------------------------
