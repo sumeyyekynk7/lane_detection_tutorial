@@ -39,3 +39,36 @@ ros2 topic pub --rate 10 /cmd_vel geometry_msgs/msg/Twist \
 
 
 -----------------------------
+cd /home/lviv/serit_takip
+colcon build --symlink-install
+source install/setup.bash
+ros2 launch my_robot_description simulation.launch.py
+
+-----------------------
+
+Yeni terminalde önce ROS 2 ortamını tanıt:
+cd /home/lviv/serit_takip
+source install/setup.bash
+Sonra klavye kontrol programını çalıştır:
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+Bu program klavyeden aldığı komutları /cmd_vel topic’ine gönderir. Araç da bu topic’i dinleyerek hareket eder.
+
+--------------------------------------------
+
+OpenCV, bilgisayarın görüntüleri işlemesini sağlayan bir yazılım kütüphanesidir. Açılımı Open Source Computer Vision Library’dir.
+Bizim projemizde kamera görüntüsüne bakıp şeritleri bulmak için kullanacağız.
+Örneğin OpenCV ile:
+- Kamera görüntüsünü açabiliriz.
+- Görüntüyü siyah-beyaz yapabiliriz.
+- Sarı ve beyaz şeritleri renklerine göre ayırabiliriz.
+- Çizgilerin konumunu bulabiliriz.
+- Şeridin merkezinin aracın sağında mı solunda mı olduğunu hesaplayabiliriz.
+
+-----------------
+
+Basitçe:
+- ROS: Görüntüyü kameradan kodumuza getirir.
+- cv_bridge: Görüntüyü OpenCV’ye uygun hâle çevirir.
+- OpenCV: Görüntünün içindeki yolu ve şeritleri inceler.
+
+--------------------------

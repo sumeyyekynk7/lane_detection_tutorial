@@ -27,6 +27,7 @@ setup(
             'my_first_node = my_robot_controller.my_first_node:main',
             'talker = my_robot_controller.talker_node:main',
             'listener = my_robot_controller.listener_node:main',
+             'camera_node = my_robot_controller.camera_node:main',
         ],
     },
 )
