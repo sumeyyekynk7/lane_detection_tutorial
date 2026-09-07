@@ -20,8 +20,10 @@ ros2 launch my_robot_description simulation.launch.py
 
 Şimdi aracı hareket ettirebilirsin.
 İleri sürmek için:
+
 ros2 topic pub --rate 10 /cmd_vel geometry_msgs/msg/Twist \
 "{linear: {x: 0.3}, angular: {z: 0.0}}"
+
 Komut çalıştığı sürece araç ileri gitmelidir. Durdurmak için:
 Ctrl+C
 Ardından kesin durma komutu gönder:
@@ -84,3 +86,42 @@ Basitçe:
 5. **Otomatik sürüş:** İleri hız ve dönüş komutlarını `/cmd_vel` üzerinden yayınlama, şerit kaybolduğunda durma ve oval pistte test etme.
 
 ----------------------------
+
+source install/setup.bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+---------------------------------
+
+importlar
+
+class CameraNode(Node):
+
+    def __init__(self):
+        # Başlangıç ayarları
+
+    def average_line(...):
+        # Şerit doğrusu bulma
+
+    def smooth_line(...):
+        # Titreşimi azaltma
+
+    def image_callback(...):
+        # Kamera görüntüsü geldiğinde çalışan ana bölüm
+
+
+--------------------------------------
+
+İki şerit görünüyorsa:
+    şerit genişliğini ölç ve kaydet
+
+Sonraki karede yalnızca beyaz görünüyorsa:
+    son bilinen şerit genişliğiyle şerit merkezini tahmin et
+
+Yalnızca sarı görünüyorsa:
+    yine son bilinen genişlikle merkezi tahmin et
+
+İkisi de görünmüyorsa:
+    robotu durdur
+
+
+--------------------------------    

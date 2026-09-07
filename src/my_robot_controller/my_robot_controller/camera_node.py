@@ -1,12 +1,15 @@
 import cv2
 
-import numpy as np 
+import numpy as np
 
 import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+
+from geometry_msgs.msg import Twist
+
 
 class CameraNode(Node):
 
@@ -16,6 +19,14 @@ class CameraNode(Node):
         self.bridge = CvBridge()
         self.previous_yellow_line = None
         self.previous_white_line = None
+        self.missing_lane_frames = 0
+        # Piksel hatasını dönüş hızına çeviren oransal kontrol katsayısı.
+        self.kp = 0.005
+        self.max_angular_speed = 1.0
+        self.linear_speed = 0.30
+        self.previous_angular_z = 0.0
+        self.steering_alpha = 0.25
+        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.camera_subscriber = self.create_subscription(
             Image,
             '/camera/front_camera/image_raw',
@@ -30,7 +41,7 @@ class CameraNode(Node):
         lines,
         image_width,
         image_height,
-        minimum_midpoint_x=None
+        expected_side=None
     ):
         if lines is None:
             return None
@@ -44,10 +55,9 @@ class CameraNode(Node):
             dy = y2 - y1
             midpoint_x = (x1 + x2) / 2.0
 
-            if (
-                minimum_midpoint_x is not None
-                and midpoint_x < minimum_midpoint_x
-            ):
+            if expected_side == 'left' and midpoint_x > image_width * 0.55:
+                continue
+            if expected_side == 'right' and midpoint_x < image_width * 0.45:
                 continue
 
             if abs(dy) > 0.1 * max(abs(dx), 1):
@@ -81,6 +91,15 @@ class CameraNode(Node):
             for current, previous in zip(current_line, previous_line)
         )
 
+    def publish_command(self, linear_x, angular_z):
+        command = Twist()
+        command.linear.x = linear_x
+        command.angular.z = angular_z
+        self.cmd_vel_publisher.publish(command)
+
+    def stop_robot(self):
+        self.publish_command(0.0, 0.0)
+
     def image_callback(self, message):
         cv_image = self.bridge.imgmsg_to_cv2(
             message,
@@ -90,10 +109,7 @@ class CameraNode(Node):
         height = cv_image.shape[0]
         roi = cv_image[height // 2:height, :]
 
-        hsv_image = cv2.cvtColor(
-        roi,
-        cv2.COLOR_BGR2HSV
-        )
+        hsv_image = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
         lower_yellow = np.array([15, 80, 80])
         upper_yellow = np.array([40, 255, 255])
@@ -109,8 +125,12 @@ class CameraNode(Node):
             upper_white
         )
 
-        lane_mask = cv2.bitwise_or(yellow_mask, white_mask)
-        edges = cv2.Canny(lane_mask, 50, 150)
+        # İnce gürültüleri temizle, şerit çizgisindeki küçük boşlukları kapat.
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        yellow_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_OPEN, kernel)
+        yellow_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_CLOSE, kernel)
+        white_mask = cv2.morphologyEx(white_mask, cv2.MORPH_OPEN, kernel)
+        white_mask = cv2.morphologyEx(white_mask, cv2.MORPH_CLOSE, kernel)
 
         yellow_edges = cv2.Canny(yellow_mask, 50, 150)
         white_edges = cv2.Canny(white_mask, 50, 150)
@@ -138,29 +158,30 @@ class CameraNode(Node):
         yellow_line = self.average_line(
             yellow_lines,
             roi.shape[1],
-            roi.shape[0]
+            roi.shape[0],
+            expected_side='left'
         )
         white_line = self.average_line(
             white_lines,
             roi.shape[1],
             roi.shape[0],
-            minimum_midpoint_x=roi.shape[1] // 2
+            expected_side='right'
         )
 
-        yellow_line = self.smooth_line(
-            yellow_line,
-            self.previous_yellow_line
-        )
-        white_line = self.smooth_line(
-            white_line,
-            self.previous_white_line
-        )
-
-        if yellow_line is not None:
+        if yellow_line is not None and white_line is not None:
+            self.missing_lane_frames = 0
+            yellow_line = self.smooth_line(
+                yellow_line, self.previous_yellow_line
+            )
+            white_line = self.smooth_line(white_line, self.previous_white_line)
             self.previous_yellow_line = yellow_line
-
-        if white_line is not None:
             self.previous_white_line = white_line
+        else:
+            self.missing_lane_frames += 1
+            # Eski bir çizgiyi uzun süre ekranda tutup yanlış güven oluşturma.
+            if self.missing_lane_frames >= 3:
+                self.previous_yellow_line = None
+                self.previous_white_line = None
 
         if yellow_line is not None:
             x1, y1, x2, y2 = yellow_line
@@ -170,17 +191,31 @@ class CameraNode(Node):
             x1, y1, x2, y2 = white_line
             cv2.line(hough_image, (x1, y1), (x2, y2), (0, 255, 0), 5)
 
-
-        moments = cv2.moments(yellow_mask)
-
-        if moments['m00'] > 0:
-            center_x = int(moments['m10'] / moments['m00'])
-            center_y = int(moments['m01'] / moments['m00'])
+        if yellow_line is not None and white_line is not None:
+            yellow_x_bottom = yellow_line[0]
+            white_x_bottom = white_line[0]
+            center_x = (yellow_x_bottom + white_x_bottom) // 2
+            center_y = roi.shape[0] - 1
             image_center_x = roi.shape[1] // 2
             error = center_x - image_center_x
+            # Pozitif hata: şerit görüntüde sağda. ROS'ta negatif angular.z
+            # robotu sağa döndürdüğü için işareti burada ters çeviriyoruz.
+            target_angular_z = -self.kp * error
+            target_angular_z = float(np.clip(
+                target_angular_z,
+                -self.max_angular_speed,
+                self.max_angular_speed
+            ))
+            angular_z = (
+                self.steering_alpha * target_angular_z
+                + (1.0 - self.steering_alpha) * self.previous_angular_z
+            )
+            self.previous_angular_z = angular_z
+
+            self.publish_command(self.linear_speed, angular_z)
 
             cv2.circle(
-                roi,
+                hough_image,
                 (center_x, center_y),
                 8,
                 (0, 0, 255),
@@ -188,7 +223,7 @@ class CameraNode(Node):
             )
 
             cv2.putText(
-                roi,
+                hough_image,
                 f'Serit merkezi: {center_x}',
                 (20, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
@@ -198,15 +233,23 @@ class CameraNode(Node):
             )
 
             cv2.line(
-                roi,
+                hough_image,
+                (center_x, 0),
+                (center_x, roi.shape[0]),
+                (255, 0, 0),
+                2
+            )
+
+            cv2.line(
+                hough_image,
                 (image_center_x, 0),
-                (image_center_x, roi.shape[0]),
+                (image_center_x, hough_image.shape[0]),
                 (0, 255, 0),
                 2
             )
 
             cv2.putText(
-                roi,
+                hough_image,
                 f'Hata: {error}',
                 (20, 60),
                 cv2.FONT_HERSHEY_SIMPLEX,
@@ -214,25 +257,50 @@ class CameraNode(Node):
                 (0, 255, 0),
                 2
             )
+            cv2.putText(
+                hough_image,
+                f'Donus komutu: {angular_z:.2f}',
+                (20, 90),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (255, 255, 0),
+                2
+            )
+        else:
+            self.previous_angular_z = 0.0
+            self.stop_robot()
 
-        # cv2.imshow('Tam Kamera Goruntusu', cv_image)
-        # cv2.imshow('Yol Bolgesi ROI', roi)
-        # cv2.imshow('Sari Maske', yellow_mask)
-        # cv2.imshow('Beyaz Maske', white_mask)
-        # cv2.imshow('Canny Kenarlari', edges)
+            cv2.putText(
+                hough_image,
+                'Serit bulunamadi',
+                (20, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 0, 255),
+                2
+            )
+
+        cv2.imshow('Tam Kamera Goruntusu', cv_image)
+        cv2.imshow('Yol Bolgesi ROI', roi)
+        cv2.imshow('Sari Maske', yellow_mask)
+        cv2.imshow('Beyaz Maske', white_mask)
         cv2.imshow('Hough Cizgileri', hough_image)
         cv2.waitKey(1)
-
 
 
 def main(args=None):
     rclpy.init(args=args)
 
     node = CameraNode()
-    rclpy.spin(node)
-
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.stop_robot()
+        node.destroy_node()
+        rclpy.shutdown()
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

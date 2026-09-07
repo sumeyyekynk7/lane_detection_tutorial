@@ -253,19 +253,8 @@
     </joint>
 
 
-        <!-- Kamera gövdesi -->
+    <!-- Kamera gövdesi -->
     <link name="camera_link">
-
-        <visual>
-            <geometry>
-                <box size="0.08 0.12 0.08"/>
-            </geometry>
-
-            <material name="camera_black">
-                <color rgba="0.05 0.05 0.05 1.0"/>
-            </material>
-        </visual>
-
         <collision>
             <geometry>
                 <box size="0.08 0.12 0.08"/>
@@ -317,7 +306,7 @@
 
             <always_on>true</always_on>
             <update_rate>30.0</update_rate>
-            <visualize>true</visualize>
+            <visualize>false</visualize>
 
             <camera name="front_camera">
 
