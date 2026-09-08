@@ -62,3 +62,31 @@ def test_one_hough_segment_is_enough():
     node = make_controller()
     lines = np.array([[[400, 100, 600, 230]]])
     assert node.average_line(lines, 640, 240, 'right') is not None
+
+
+@pytest.mark.parametrize('error,sign', [(100, -1), (-100, 1), (0, 0)])
+def test_steering_direction_and_limit(error, sign):
+    node = make_controller()
+    result = node.calculate_steering(error)
+    assert np.sign(result) == sign
+    for _ in range(100):
+        result = node.calculate_steering(error * 100)
+        assert abs(result) <= node.max_angular_speed
+
+
+def test_lane_loss_stops_after_moving(monkeypatch):
+    node = make_controller()
+    monkeypatch.setattr(cv2, 'imshow', lambda *args: None)
+    monkeypatch.setattr(cv2, 'waitKey', lambda *args: None)
+    frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    cv2.line(frame, (570, 479), (380, 260), (160, 160, 160), 8)
+    node.bridge.imgmsg_to_cv2.return_value = frame
+    node.image_callback(Mock())
+    assert node.cmd_vel_publisher.publish.call_args.args[0].linear.x > 0
+    node.bridge.imgmsg_to_cv2.return_value = np.zeros_like(frame)
+    node.image_callback(Mock())
+    command = node.cmd_vel_publisher.publish.call_args.args[0]
+    assert command.linear.x == 0
+    assert command.angular.z == 0
+    assert node.previous_angular_z == 0
+    assert node.previous_white_line is None

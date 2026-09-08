@@ -144,3 +144,13 @@ Yalnızca sarı veya beyaz çizgi algılandığında ekranda `Tahmini merkez` ya
 son genişlikle 0.12 m/s hızında takip sürer. İlk görüntüde tek çizgi varsa
 başlangıç genişliği görüntü genişliğinin %80'i olarak varsayılır; bu değer
 kamera ve piste göre ayar gerektirebilir. İki çizgi de kaybolursa araç durur.
+----------------------------
+
+yapayzeka
+Tamamladım. NOTLAR.md dosyana dokunmadım.
+- [README.md](/home/lviv/serit_takip/README.md) hazırladım: kurulum, çalıştırma, sistem şeması, testler ve sorun giderme açıklamaları var.
+- Kamera kodunda şerit algılama ve dönüş hesabını ayrı fonksiyonlara ayırdım; okumak ve test etmek kolaylaştı. Sürüş ayarlarını korudum.
+- Girinti ve biçim hatalarını düzelttim; OpenCV ve NumPy bağımlılıklarını ekledim.
+- Dönüş yönü, dönüş sınırı ve hareket sırasında şerit kaybolunca durma testlerini ekledim.
+İki paket derlendi; son test raporunda hata yok. Mevcut telif hakkı testi atlanıyor. Bu düzenleme sonrasında simülasyonda yeniden tur testi yapmadım.
+_--------------------------

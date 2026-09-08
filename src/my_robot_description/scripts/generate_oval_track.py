@@ -42,7 +42,6 @@ lines = []
 
 def add_line(text):
     """Verilen metni oluşturulacak dünya dosyasına ekler."""
-
     lines.append(text)
 
 
@@ -58,7 +57,6 @@ def add_visual(
     color
 ):
     """Gazebo dünyasına görünen bir kutu ekler."""
-
     add_line(f'                <visual name="{name}">')
     add_line(
         f'                    <pose>'
@@ -92,7 +90,6 @@ def add_collision(
     yaw
 ):
     """Gazebo fizik motoru için çarpışma kutusu ekler."""
-
     add_line(f'                <collision name="{name}">')
     add_line(
         f'                    <pose>'

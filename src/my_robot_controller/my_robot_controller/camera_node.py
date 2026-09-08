@@ -126,15 +126,8 @@ class CameraNode(Node):
     def stop_robot(self):
         self.publish_command(0.0, 0.0)
 
-    def image_callback(self, message):
-        cv_image = self.bridge.imgmsg_to_cv2(
-            message,
-            desired_encoding='bgr8'
-        )
-
-        height = cv_image.shape[0]
-        roi = cv_image[height // 2:height, :]
-
+    def detect_lane_lines(self, roi):
+        """Yol bölgesinden renk maskelerini ve Hough çizgilerini çıkar."""
         hsv_image = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
         lower_yellow = np.array([15, 80, 50])
@@ -179,6 +172,39 @@ class CameraNode(Node):
             maxLineGap=30
         )
 
+        return yellow_mask, white_mask, yellow_lines, white_lines
+
+    def calculate_steering(self, error):
+        """P kontrolünü uygula, dönüş hızını sınırla ve yumuşat."""
+        # Pozitif hata: şerit görüntüde sağda. ROS'ta negatif angular.z
+        # robotu sağa döndürdüğü için işareti burada ters çeviriyoruz.
+        target_angular_z = -self.kp * error
+        target_angular_z = float(np.clip(
+            target_angular_z,
+            -self.max_angular_speed,
+            self.max_angular_speed
+        ))
+        angular_z = (
+            self.steering_alpha * target_angular_z
+            + (1.0 - self.steering_alpha) * self.previous_angular_z
+        )
+        self.previous_angular_z = angular_z
+
+        return angular_z
+
+    def image_callback(self, message):
+        cv_image = self.bridge.imgmsg_to_cv2(
+            message,
+            desired_encoding='bgr8'
+        )
+
+        height = cv_image.shape[0]
+        roi = cv_image[height // 2:height, :]
+
+        yellow_mask, white_mask, yellow_lines, white_lines = (
+            self.detect_lane_lines(roi)
+        )
+
         hough_image = roi.copy()
 
         yellow_line = self.average_line(
@@ -217,19 +243,7 @@ class CameraNode(Node):
         if center_x is not None:
             image_center_x = roi.shape[1] // 2
             error = center_x - image_center_x
-            # Pozitif hata: şerit görüntüde sağda. ROS'ta negatif angular.z
-            # robotu sağa döndürdüğü için işareti burada ters çeviriyoruz.
-            target_angular_z = -self.kp * error
-            target_angular_z = float(np.clip(
-                target_angular_z,
-                -self.max_angular_speed,
-                self.max_angular_speed
-            ))
-            angular_z = (
-                self.steering_alpha * target_angular_z
-                + (1.0 - self.steering_alpha) * self.previous_angular_z
-            )
-            self.previous_angular_z = angular_z
+            angular_z = self.calculate_steering(error)
 
             speed = self.linear_speed * (0.4 if estimated else 1.0)
             self.publish_command(speed, angular_z)

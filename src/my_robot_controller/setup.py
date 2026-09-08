@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='lviv',
     maintainer_email='sumeyye.kaynak.76@hotmail.com',
-    description='TODO: Package description',
+    description='ROS 2 kamera tabanlı şerit takip kontrolcüsü',
     license='TODO: License declaration',
     extras_require={
         'test': [
@@ -27,7 +27,7 @@ setup(
             'my_first_node = my_robot_controller.my_first_node:main',
             'talker = my_robot_controller.talker_node:main',
             'listener = my_robot_controller.listener_node:main',
-             'camera_node = my_robot_controller.camera_node:main',
+            'camera_node = my_robot_controller.camera_node:main',
         ],
     },
 )
