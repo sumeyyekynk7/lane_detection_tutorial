@@ -19,7 +19,7 @@ class CameraNode(Node):
         self.bridge = CvBridge()
         self.previous_yellow_line = None
         self.previous_white_line = None
-        self.missing_lane_frames = 0
+        self.lane_width_ratio = 0.8
         # Piksel hatasını dönüş hızına çeviren oransal kontrol katsayısı.
         self.kp = 0.005
         self.max_angular_speed = 1.0
@@ -64,7 +64,7 @@ class CameraNode(Node):
                 x_points.extend([x1, x2])
                 y_points.extend([y1, y2])
 
-        if len(x_points) < 4 or max(y_points) - min(y_points) < 10:
+        if len(x_points) < 2 or max(y_points) - min(y_points) < 10:
             return None
 
         x_slope, x_intercept = np.polyfit(y_points, x_points, 1)
@@ -74,8 +74,7 @@ class CameraNode(Node):
         x_bottom = int(x_slope * y_bottom + x_intercept)
         x_top = int(x_slope * y_top + x_intercept)
 
-        x_bottom = int(np.clip(x_bottom, 0, image_width - 1))
-        x_top = int(np.clip(x_top, 0, image_width - 1))
+        # Görüntü dışındaki kesişimleri koru; kırpmak merkez hesabını bozar.
 
         return x_bottom, y_bottom, x_top, y_top
 
@@ -90,6 +89,33 @@ class CameraNode(Node):
             int(alpha * current + (1.0 - alpha) * previous)
             for current, previous in zip(current_line, previous_line)
         )
+
+    def lane_center(self, yellow_line, white_line, image_width, target_y):
+        """Görünen sınırdan merkezi hesapla, iki sınır varsa genişliği öğren."""
+        def x_at(line):
+            x1, y1, x2, y2 = line
+            return x1 + (x2 - x1) * (target_y - y1) / (y2 - y1)
+
+        if yellow_line is None and white_line is None:
+            return None, False
+
+        if yellow_line is not None and white_line is not None:
+            left_x = x_at(yellow_line)
+            right_x = x_at(white_line)
+            width = right_x - left_x
+            if not 0.2 * image_width <= width <= 2.0 * image_width:
+                return None, False
+            self.lane_width_ratio = (
+                0.25 * width / image_width + 0.75 * self.lane_width_ratio
+            )
+            return int((left_x + right_x) / 2), False
+
+        # İlk karede tek sınır varsa başlangıç genişliğini kullan.
+        # Her iki sınır görüldükçe bu tahmin ölçülen genişliğe yaklaşır.
+        half_width = self.lane_width_ratio * image_width / 2
+        if yellow_line is not None:
+            return int(x_at(yellow_line) + half_width), True
+        return int(x_at(white_line) - half_width), True
 
     def publish_command(self, linear_x, angular_z):
         command = Twist()
@@ -111,7 +137,7 @@ class CameraNode(Node):
 
         hsv_image = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
-        lower_yellow = np.array([15, 80, 80])
+        lower_yellow = np.array([15, 80, 50])
         upper_yellow = np.array([40, 255, 255])
 
         yellow_mask = cv2.inRange(hsv_image, lower_yellow, upper_yellow)
@@ -126,7 +152,7 @@ class CameraNode(Node):
         )
 
         # İnce gürültüleri temizle, şerit çizgisindeki küçük boşlukları kapat.
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
         yellow_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_OPEN, kernel)
         yellow_mask = cv2.morphologyEx(yellow_mask, cv2.MORPH_CLOSE, kernel)
         white_mask = cv2.morphologyEx(white_mask, cv2.MORPH_OPEN, kernel)
@@ -168,20 +194,12 @@ class CameraNode(Node):
             expected_side='right'
         )
 
-        if yellow_line is not None and white_line is not None:
-            self.missing_lane_frames = 0
-            yellow_line = self.smooth_line(
-                yellow_line, self.previous_yellow_line
-            )
-            white_line = self.smooth_line(white_line, self.previous_white_line)
-            self.previous_yellow_line = yellow_line
-            self.previous_white_line = white_line
-        else:
-            self.missing_lane_frames += 1
-            # Eski bir çizgiyi uzun süre ekranda tutup yanlış güven oluşturma.
-            if self.missing_lane_frames >= 3:
-                self.previous_yellow_line = None
-                self.previous_white_line = None
+        yellow_line = self.smooth_line(
+            yellow_line, self.previous_yellow_line
+        )
+        white_line = self.smooth_line(white_line, self.previous_white_line)
+        self.previous_yellow_line = yellow_line
+        self.previous_white_line = white_line
 
         if yellow_line is not None:
             x1, y1, x2, y2 = yellow_line
@@ -191,11 +209,12 @@ class CameraNode(Node):
             x1, y1, x2, y2 = white_line
             cv2.line(hough_image, (x1, y1), (x2, y2), (0, 255, 0), 5)
 
-        if yellow_line is not None and white_line is not None:
-            yellow_x_bottom = yellow_line[0]
-            white_x_bottom = white_line[0]
-            center_x = (yellow_x_bottom + white_x_bottom) // 2
-            center_y = roi.shape[0] - 1
+        # Virajı görebilmek için ROI'nin alt kenarı yerine ilerisine bak.
+        center_y = int(roi.shape[0] * 0.6)
+        center_x, estimated = self.lane_center(
+            yellow_line, white_line, roi.shape[1], center_y
+        )
+        if center_x is not None:
             image_center_x = roi.shape[1] // 2
             error = center_x - image_center_x
             # Pozitif hata: şerit görüntüde sağda. ROS'ta negatif angular.z
@@ -212,7 +231,8 @@ class CameraNode(Node):
             )
             self.previous_angular_z = angular_z
 
-            self.publish_command(self.linear_speed, angular_z)
+            speed = self.linear_speed * (0.4 if estimated else 1.0)
+            self.publish_command(speed, angular_z)
 
             cv2.circle(
                 hough_image,
@@ -224,7 +244,7 @@ class CameraNode(Node):
 
             cv2.putText(
                 hough_image,
-                f'Serit merkezi: {center_x}',
+                f'{"Tahmini merkez" if estimated else "Serit merkezi"}: {center_x}',
                 (20, 30),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,

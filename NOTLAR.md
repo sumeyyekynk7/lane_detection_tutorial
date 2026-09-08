@@ -124,4 +124,23 @@ Yalnızca sarı görünüyorsa:
     robotu durdur
 
 
---------------------------------    
+--------------------------------
+## Otomatik şerit takibini çalıştırma
+
+Simülasyon açıkken, eski `camera_node`, klavye kontrolü ve sürekli
+`ros2 topic pub /cmd_vel` komutlarını kendi terminallerinde Ctrl+C ile kapat.
+Aynı anda birden fazla kontrolcü çalışırsa hareket ve dur komutları çakışır.
+
+```bash
+cd /home/lviv/serit_takip
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install --packages-select my_robot_controller
+source install/setup.bash
+ros2 run my_robot_controller camera_node
+```
+
+İki çizgi algılandığında şerit genişliği öğrenilir ve hız 0.30 m/s olur.
+Yalnızca sarı veya beyaz çizgi algılandığında ekranda `Tahmini merkez` yazar;
+son genişlikle 0.12 m/s hızında takip sürer. İlk görüntüde tek çizgi varsa
+başlangıç genişliği görüntü genişliğinin %80'i olarak varsayılır; bu değer
+kamera ve piste göre ayar gerektirebilir. İki çizgi de kaybolursa araç durur.
